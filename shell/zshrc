@@ -18,9 +18,18 @@ DEFAULT_USER=`whoami`
 export EDITOR=/usr/bin/vim
 export VISUAL=/usr/bin/vim
 
-# Load more colorful dircolors
-eval `dircolors ~/.dircolors`
 
+alias sshEoltasCSStage='ssh -p 13022 cs_stg@212.59.16.100'
+alias sshEoltasB2BStage='ssh -p 12522 syl_stg@212.59.16.125'
+alias sshEoltasLeadStage='ssh -p 13322 crm_stg@212.59.16.100'
+alias sshEoltasAXStage='ssh -p 12122 ax_stg@212.59.16.121'
+alias sshEoltasPIMStage='ssh -p 12322 pim_stg@212.59.16.123'
+alias sshEoltasSTOCKStage='ssh -p 13922 ss_stg@212.59.16.100'
+alias sshEoltasPRICINGStage='ssh -p 13722 ps_stg@212.59.16.100'
+alias sshEoltasORDERStage='ssh -p 13522 ord_stg@212.59.16.100'
+
+alias sfcc='bin/console cache:clear --no-warmup && bin/console cache:warmup'
+alias rrmouse='sudo modprobe -r psmouse && sudo modprobe psmouse'
 
 # eoltas b2b {{
 alias cdeoltasb2b='cd /var/www/eoltas-projects/b2b'
@@ -53,4 +62,20 @@ alias mountEoltasCentralStorage='sudo mount docker.dev:/home/project/projects/eo
 alias umountEoltasCentralStorage='sudo umount docker.dev:/home/project/projects/eoltas/central-storage/src'
 alias sshEoltasCentralStorage='ssh project@dev.central-storage.eoltas.dev'
 # }}
+
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
+if [[ -z "$TMUX" ]]
+then
+    ID="`tmux ls | grep -vm1 attached | cut -d: -f1`"
+    if [[ -z "$ID" ]]
+    then
+        tmux new-session
+    else
+        tmux attach-session -t "$ID"
+    fi
+fi
 
