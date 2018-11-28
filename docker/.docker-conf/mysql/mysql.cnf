@@ -1,0 +1,10 @@
+[mysqld]
+
+innodb_buffer_pool_size=100M 
+max_allowed_packet=4096M 
+net_read_timeout=3600 
+net_write_timeout=3600
+
+sql_mode=STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION
+
+

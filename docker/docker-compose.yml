@@ -1,0 +1,102 @@
+version: '3'
+services:
+
+  workspace:
+    build: 
+      context: ./.docker-conf/main
+      args:
+        - PHP_VERSION=7.1
+        - PHP_MEMORY_LIMIT=-1
+    container_name: workspace
+    ports:
+      - "8000-8005:8000-8005"
+    volumes:
+      - ./eoltas:/var/www
+      - ./.docker/data/workspace/shared:/home/laradock/shared
+      - $SSH_AUTH_SOCK:/ssh-agent # Forward local machine SSH key to docker
+    tty: true
+    links:
+#      - mailhog
+      - mysql
+      - elasticsearch
+      - redis
+#      - mongo
+      - rabbitmq
+#      - mssql
+    environment:
+      SSH_AUTH_SOCK: /ssh-agent
+
+#  mailhog:
+#    image: mailhog/mailhog
+#    ports:
+#      - "1025:1025"
+#      - "8025:8025"
+
+  mysql:
+    image: mysql:5
+    ports:
+      - 13306:3306
+    volumes:
+      - ./.docker/data/mysql:/var/lib/mysql
+      - ./.docker-conf/mysql:/etc/mysql/conf.d
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      TZ: "Europe/Vilnius"
+
+#  kibana:
+#    image: kibana
+#    ports:
+#      - 5601:5601
+
+  elasticsearch:
+    image: elasticsearch:5-alpine 
+    ports:
+      - 19200:9200
+      - 19300:9300
+    volumes:
+      - ./.docker/data/elasticsearch:/usr/share/elasticsearch/data
+    environment:
+      - VIRTUAL_HOST=elasticsearch.dev
+      - VIRTUAL_PORT=9200
+
+  redis:
+    image: redis:4-alpine
+    ports:
+      - 6379:6379
+    volumes:
+      - ./.docker/data/redis:/data
+    command: >
+      --requirepass password
+
+#  mongo:
+#    image: mongo:latest
+#    ports:
+#      - 27017:27017
+#    volumes:
+#      - ./.docker/data/mongo:/data/db
+
+  rabbitmq:
+    image: rabbitmq:management
+    hostname: rabbit
+    ports:
+      - 5672:5672
+      - 15672:15672
+    environment:
+      - RABBITMQ_DEFAULT_USER=project
+      - RABBITMQ_DEFAULT_PASS=project
+
+#  selenium:
+#    image: selenium/standalone-chrome
+#    ports:
+#      - 4444:4444
+#    volumes:
+#      - /dev/shm:/dev/shm
+
+#  mssql:
+#    image: microsoft/mssql-server-linux:2017-latest
+#    ports:
+#      - 1433:1433
+#    environment:
+#      ACCEPT_EULA: Y
+#      SA_PASSWORD: Mssql-p4Sw0rd
+#      MSSQL_PID: Developer

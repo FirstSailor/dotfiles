@@ -7,4 +7,3 @@ mv PowerlineSymbols.otf ~/.fonts/
 mkdir -p .config/fontconfig/conf.d #if directory doesn't exists
 sudo fc-cache -vf ~/.fonts/
 mv 10-powerline-symbols.conf ~/.config/fontconfig/conf.d/
-

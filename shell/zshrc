@@ -1,81 +1,52 @@
-# Path to your oh-my-zsh installation.
 export ZSH=$HOME/.oh-my-zsh
-export ZSH_CUSTOM=$HOME/.oh-my-zsh/custom
-export TERM="xterm-256color"
-setopt RM_STAR_WAIT
-setopt interactivecomments
-setopt CORRECT
+export VISUAL=vim
+export EDITOR="$VISUAL"
+eval `dircolors ~/.dir_colors`
+
+source $HOME/.fonts/fontawesome-regular.sh
 
 ZSH_THEME="powerlevel9k/powerlevel9k"
+
 POWERLEVEL9K_DISABLE_RPROMPT=true
 POWERLEVEL9K_COLOR_SCHEME='dark'
+POWERLEVEL9K_MODE='awesome-fontconfig'
 
-plugins=(zsh-autosuggestions common-aliases git)
+DEFAULT_USER="rokas"
+
+plugins=(zsh-autosuggestions git common-aliases tmux)
+
+ZSH_TMUX_AUTOSTART=true
 
 source $ZSH/oh-my-zsh.sh
 
-DEFAULT_USER=`whoami`
-export EDITOR=/usr/bin/vim
-export VISUAL=/usr/bin/vim
+docker-ip() {
+  docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "$@"
+}
 
+color-ssh() {
+    trap "bash .colorterm.sh" INT EXIT
+    if [[ "$*" =~ "Live" ]]; then
+        bash .colorterm.sh prod
+    elif [[ "$*" =~ "Stage" ]]; then
+        bash .colorterm.sh dev
+    else
+        bash .colorterm.sh none
+    fi
+    ssh $*
+}
 
-alias sshEoltasCSStage='ssh -p 13022 cs_stg@212.59.16.100'
-alias sshEoltasB2BStage='ssh -p 12522 syl_stg@212.59.16.125'
-alias sshEoltasLeadStage='ssh -p 13322 crm_stg@212.59.16.100'
-alias sshEoltasAXStage='ssh -p 12122 ax_stg@212.59.16.121'
-alias sshEoltasPIMStage='ssh -p 12322 pim_stg@212.59.16.123'
-alias sshEoltasSTOCKStage='ssh -p 13922 ss_stg@212.59.16.100'
-alias sshEoltasPRICINGStage='ssh -p 13722 ps_stg@212.59.16.100'
-alias sshEoltasORDERStage='ssh -p 13522 ord_stg@212.59.16.100'
+#compdef _ssh color-ssh=ssh
+#alias ssh=color-ssh
 
 alias sfcc='bin/console cache:clear --no-warmup && bin/console cache:warmup'
-alias rrmouse='sudo modprobe -r psmouse && sudo modprobe psmouse'
+alias asfcc='app/console cache:clear --no-warmup && app/console cache:warmup'
+alias rrmouse='sudo  modprobe -r psmouse && sudo modprobe psmouse'
+alias cdeoltas='cd /var/www/eoltas'
 
-# eoltas b2b {{
-alias cdeoltasb2b='cd /var/www/eoltas-projects/b2b'
+alias workspace='docker exec -e COLUMNS="`tput cols`" -e LINES="`tput lines`" -u laradock -it workspace /bin/zsh'
 
-alias mountEoltasb2b='sudo mount docker.dev:/home/project/projects/eoltas/b2b/src /var/www/eoltas-projects/b2b'
-alias umountEoltasb2b='sudo umount docker.dev:/home/project/projects/eoltas/b2b/src'
-alias sshEoltasb2b='ssh project@dev.b2b.eoltas.dev'
-
-# }}
-
-# eoltas axapta {{
-alias cdeoltasaxapta='cd /var/www/eoltas-projects/axapta'
-
-alias mountEoltasaxapta='sudo mount docker.dev:/home/project/projects/eoltas/axapta/src /var/www/eoltas-projects/axapta'
-alias umountEoltasaxapta='sudo umount docker.dev:/home/project/projects/eoltas/axapta/src'
-alias sshEoltasaxapta='ssh project@dev.axapta.eoltas.dev'
-
-# }}
-
-# eoltas pim {{
-alias cdeoltaspim='cd /var/www/eoltas-projects/pim'
-
-alias mountEoltaspim='sudo mount docker.dev:/home/project/projects/eoltas/pim/src /var/www/eoltas-projects/pim'
-alias umountEoltaspim='sudo umount docker.dev:/home/project/projects/eoltas/pim/src'
-alias sshEoltaspim='ssh project@dev.pim.eoltas.dev'
-# }}
-
-# eoltas central storage {{
-alias mountEoltasCentralStorage='sudo mount docker.dev:/home/project/projects/eoltas/central-storage/src /var/www/eoltas-projects/central-storage'
-alias umountEoltasCentralStorage='sudo umount docker.dev:/home/project/projects/eoltas/central-storage/src'
-alias sshEoltasCentralStorage='ssh project@dev.central-storage.eoltas.dev'
-# }}
-
+alias cat='pygmentize -g'
 
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
-
-if [[ -z "$TMUX" ]]
-then
-    ID="`tmux ls | grep -vm1 attached | cut -d: -f1`"
-    if [[ -z "$ID" ]]
-    then
-        tmux new-session
-    else
-        tmux attach-session -t "$ID"
-    fi
-fi
-

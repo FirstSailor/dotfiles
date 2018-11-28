@@ -1,20 +1,17 @@
-set rtp+=$HOME/.local/lib/python2.7/site-packages/powerline/bindings/vim
+set rtp+=$HOME/.local/lib/python2.7/site-packages/powerline/bindings/vim/
+
+" Always show statusline
 set laststatus=2
+
+" Use 256 colours (Use this setting only if your terminal supports 256 colours)
+set t_Co=256
+
 set number
-set nocompatible
-set term=screen-256color
-syntax on
-filetype on
-filetype indent on
-filetype plugin on
-filetype plugin indent on
+
+" filetype plugin indent on
 " show existing tab with 4 spaces width
 set tabstop=4
 " when indenting with '>', use 4 spaces width
 set shiftwidth=4
 " On pressing tab, insert 4 spaces
 set expandtab
-
-set nocompatible
-filetype off
-

@@ -9,3 +9,4 @@ $ chmod +x setup.sh
 $ ./setup.sh
 ```
 
+`~/.fonts` https://github.com/gabrielelana/awesome-terminal-fonts
