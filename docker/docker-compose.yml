@@ -1,36 +1,54 @@
 version: '3'
+
+networks:
+  backend:
+    driver: bridge
+
+volumes:
+  workspace:
+    driver: local
+  mysql:
+    driver: local
+  elasticsearch:
+    driver: local
+  redis:
+    driver: local
+  redisurl:
+    driver: local
+  mercure:
+    driver: local
+
 services:
 
   workspace:
-    build: 
-      context: ./.docker-conf/main
-      args:
-        - PHP_VERSION=7.1
-        - PHP_MEMORY_LIMIT=-1
+    image: rokasm/workspace:73-vpod
+    #    image: rokasm/workspace:71
+    #    build:
+    #      context: ./.docker-conf/main
+    #      args:
+    #        - PHP_VERSION=7.1
     container_name: workspace
     ports:
       - "8000-8005:8000-8005"
     volumes:
-      - ./eoltas:/var/www
+      - ./:/var/www
       - ./.docker/data/workspace/shared:/home/laradock/shared
       - $SSH_AUTH_SOCK:/ssh-agent # Forward local machine SSH key to docker
+    expose:
+      - "8000-8005"
     tty: true
-    links:
-#      - mailhog
-      - mysql
-      - elasticsearch
-      - redis
-#      - mongo
-      - rabbitmq
-#      - mssql
+    networks:
+      - backend
     environment:
       SSH_AUTH_SOCK: /ssh-agent
 
-#  mailhog:
-#    image: mailhog/mailhog
-#    ports:
-#      - "1025:1025"
-#      - "8025:8025"
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - backend
 
   mysql:
     image: mysql:5
@@ -40,16 +58,20 @@ services:
       - ./.docker/data/mysql:/var/lib/mysql
       - ./.docker-conf/mysql:/etc/mysql/conf.d
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      TZ: "Europe/Vilnius"
+      MYSQL_ROOT_PASSWORD: 'root'
+      TZ: 'Europe/Vilnius'
+    networks:
+      - backend
 
-#  kibana:
-#    image: kibana
-#    ports:
-#      - 5601:5601
+  #  kibana:
+  #    image: kibana
+  #    ports:
+  #      - 5601:5601
+  #    networks:
+  #      - backend
 
   elasticsearch:
-    image: elasticsearch:5-alpine 
+    image: elasticsearch:5-alpine
     ports:
       - 19200:9200
       - 19300:9300
@@ -58,45 +80,62 @@ services:
     environment:
       - VIRTUAL_HOST=elasticsearch.dev
       - VIRTUAL_PORT=9200
+    networks:
+      - backend
 
-  redis:
-    image: redis:4-alpine
-    ports:
-      - 6379:6379
-    volumes:
-      - ./.docker/data/redis:/data
-    command: >
-      --requirepass password
+      #  redis:
+      #    image: redis:4
+      #    volumes:
+      #      - ./.docker/data/redis:/data
+      #    command: redis-server --requirepass password
+      #    networks:
+      #      - backend
+      #
+      #  redisurl:
+      #    build:
+      #      context: ./.docker-conf/main/redis
+      #    volumes:
+      #      - ./.docker/data/redis-url:/data
+      #    networks:
+      #      - backend
+      #
+      #  rabbitmq:
+      #    image: rabbitmq:management
+      #    hostname: rabbit
+      #    ports:
+      #      - 5672:5672
+      #      - 15672:15672
+      #    environment:
+      #      - RABBITMQ_DEFAULT_USER=project
+      #      - RABBITMQ_DEFAULT_PASS=project
+      #    networks:
+      #      - backend
 
-#  mongo:
-#    image: mongo:latest
+      #  selenium:
+      #    image: selenium/standalone-chrome:3.141.59-fluorine
+      #    ports:
+      #      - 4444:4444
+      #    volumes:
+      #      - /dev/shm:/dev/shm
+      #    networks:
+      #      - backend
+
+      #  mercure:
+      # In production, you may want to use the managed version of Mercure, https://mercure.rocks
+      #    image: dunglas/mercure
+      #    volumes:
+      #      - ./.docker/mercure:/db
+      #    environment:
+      # You should definitely change all these values in production
+#      - DB_PATH=/db/updates.db
+#      - JWT_KEY=!ChangeMe!
+#      - ALLOW_ANONYMOUS=1
+#      - CORS_ALLOWED_ORIGINS=*
+#      - PUBLISH_ALLOWED_ORIGINS=http://localhost:1337,https://localhost:1338
+#      - DEMO=1
+#      - HISTORY_SIZE=1
+#      - HISTORY_CLEANUP_FREQUENCY=1
 #    ports:
-#      - 27017:27017
-#    volumes:
-#      - ./.docker/data/mongo:/data/db
-
-  rabbitmq:
-    image: rabbitmq:management
-    hostname: rabbit
-    ports:
-      - 5672:5672
-      - 15672:15672
-    environment:
-      - RABBITMQ_DEFAULT_USER=project
-      - RABBITMQ_DEFAULT_PASS=project
-
-#  selenium:
-#    image: selenium/standalone-chrome
-#    ports:
-#      - 4444:4444
-#    volumes:
-#      - /dev/shm:/dev/shm
-
-#  mssql:
-#    image: microsoft/mssql-server-linux:2017-latest
-#    ports:
-#      - 1433:1433
-#    environment:
-#      ACCEPT_EULA: Y
-#      SA_PASSWORD: Mssql-p4Sw0rd
-#      MSSQL_PID: Developer
+#      - 1337:80
+#    networks:
+#      - backend

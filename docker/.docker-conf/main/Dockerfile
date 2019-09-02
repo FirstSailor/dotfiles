@@ -1,7 +1,6 @@
 ARG PHP_VERSION=${PHP_VERSION}
-ARG PHP_MEMORY_LIMIT=${PHP_MEMORY_LIMIT}
 
-FROM laradock/workspace:2.2-${PHP_VERSION}
+FROM letsdockerize/laradock-workspace:2.3-${PHP_VERSION}
 
 # Start as root
 USER root
@@ -21,21 +20,20 @@ ARG PHP_MEMORY_LIMIT=${PHP_MEMORY_LIMIT}
 
 # always run apt update when start and after add new source list, then clean up at end.
 RUN apt-get update -yqq && \
-    apt-get install -yqq curl wget zsh vim ruby-full python-pip mysql-client mlocate net-tools && \
-    apt-get install -yqq php-imagick php-apcu php${PHP_VERSION}-soap php${PHP_VERSION}-sybase && \
-    gem install bundler sass && \
-    pecl channel-update pecl.php.net && \
-    groupadd -g ${PGID} laradock && \
-    useradd -u ${PUID} -g laradock -m laradock -G docker_env && \
-    usermod -p "*" laradock && \
-    echo 'date.timezone="Europe/Vilnius"' >> /etc/php/${PHP_VERSION}/cli/php.ini && \
-    echo 'opcache.enable=1' >> /etc/php/${PHP_VERSION}/cli/php.ini && \
-    echo 'opcache.validate_timestamps=on' >> /etc/php/${PHP_VERSION}/cli/php.ini && \
-    echo 'opcache.revalidate_freq=0' >> /etc/php/${PHP_VERSION}/cli/php.ini && \
-    echo 'max_input_vars=10000' >> /etc/php/${PHP_VERSION}/cli/php.ini && \
-    sed -i 's/memory_limit = .*/memory_limit = '${PHP_MEMORY_LIMIT}'/' /etc/php/${PHP_VERSION}/cli/php.ini
+    apt-get install -yqq graphviz curl wget zip unzip zsh vim ruby-full python-pip mysql-client mlocate net-tools xclip sudo libssl-dev && \
+#    apt-get install -yqq php-imagick php-apcu php${PHP_VERSION}-soap php${PHP_VERSION}-sybase php${PHP_VERSION}-fpm && \
+    gem update --system && gem install bundler sass && \
+    pecl channel-update pecl.php.net
+
+RUN groupadd -g ${PGID} laradock
+RUN useradd -u ${PUID} -g laradock -m laradock -G docker_env
+RUN usermod -p "*" laradock
 
 COPY ./freetds.conf /etc/freetds/freetds.conf
+COPY ./php-cli.ini /etc/php/${PHP_VERSION}/cli/php.ini
+COPY ./php-fpm.ini /etc/php/${PHP_VERSION}/fpm/php.ini
+
+RUN composer self-update --stable
 
 ###########################################################################
 # Set Timezone
@@ -94,11 +92,12 @@ RUN echo "" >> ~/.bashrc && \
 # Symfony installer:
 ###########################################################################
 
-USER root
+USER laradock
 
-RUN mkdir -p /usr/local/bin && \
-    curl -LsS https://symfony.com/installer -o /usr/local/bin/symfony && \
-    chmod a+x /usr/local/bin/symfony
+RUN wget https://get.symfony.com/cli/installer -O - | bash
+# Export composer vendor path
+RUN echo "" >> ~/.bashrc && \
+    echo 'export PATH="~/.symfony/bin:$PATH"' >> ~/.bashrc
 
 ###########################################################################
 # Composer:
@@ -124,25 +123,43 @@ RUN composer global require hirak/prestissimo
 # MongoDB:
 ###########################################################################
 
-USER root
-ARG PHP_VERSION=${PHP_VERSION}
-
-# Install the mongodb extension
-RUN pecl -q install mongodb && \
-    echo "extension=mongodb.so" >> /etc/php/${PHP_VERSION}/mods-available/mongodb.ini && \
-    ln -s /etc/php/${PHP_VERSION}/mods-available/mongodb.ini /etc/php/${PHP_VERSION}/cli/conf.d/30-mongodb.ini
+#USER root
+#ARG PHP_VERSION=${PHP_VERSION}
+#
+## Install the mongodb extension
+#RUN pecl -q install mongodb && \
+#    echo "extension=mongodb.so" >> /etc/php/${PHP_VERSION}/mods-available/mongodb.ini && \
+#    ln -s /etc/php/${PHP_VERSION}/mods-available/mongodb.ini /etc/php/${PHP_VERSION}/cli/conf.d/30-mongodb.ini
 
 ###########################################################################
 # PHP REDIS EXTENSION
 ###########################################################################
 
-USER root
-ARG PHP_VERSION=${PHP_VERSION}
+#USER root
+#ARG PHP_VERSION=${PHP_VERSION}
+#
+## Install Php Redis extension
+#RUN printf "\n" | pecl -q install -o -f redis && \
+#    echo "extension=redis.so" >> /etc/php/${PHP_VERSION}/mods-available/redis.ini && \
+#    phpenmod redis
 
-# Install Php Redis extension
-RUN printf "\n" | pecl -q install -o -f redis && \
-    echo "extension=redis.so" >> /etc/php/${PHP_VERSION}/mods-available/redis.ini && \
-    phpenmod redis
+###########################################################################
+# xDebug:
+###########################################################################
+
+#USER root
+#ARG PHP_VERSION=${PHP_VERSION}
+#
+#RUN apt-get install -y php${PHP_VERSION}-xdebug && \
+#    sed -i 's/^;//g' /etc/php/${PHP_VERSION}/cli/conf.d/20-xdebug.ini && \
+#    sed -i 's/^;//g' /etc/php/${PHP_VERSION}/fpm/conf.d/20-xdebug.ini
+#
+#USER root
+#ARG PHP_VERSION=${PHP_VERSION}
+#
+## Copy xdebug configuration for remote debugging
+#COPY ./xdebug.ini /etc/php/${PHP_VERSION}/cli/conf.d/xdebug.ini
+#COPY ./xdebug.ini /etc/php/${PHP_VERSION}/fpm/conf.d/xdebug.ini
 
 ###########################################################################
 # Node / NVM:
@@ -161,7 +178,7 @@ ENV NVM_DIR /home/laradock/.nvm
 RUN mkdir -p /home/laradock/.nvm
 RUN if [ ${INSTALL_NODE} = true ]; then \
     # Install nvm (A Node Version Manager)
-    curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.11/install.sh | bash && \
+    curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.34.0/install.sh | bash && \
         . $NVM_DIR/nvm.sh && \
         nvm install ${NODE_VERSION} && \
         nvm use ${NODE_VERSION} && \
@@ -234,6 +251,8 @@ RUN if [ ${INSTALL_YARN} = true ]; then \
 
 USER root
 
+RUN echo "export PATH=$PATH" > /etc/environment
+
 # Clean up
 RUN apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
@@ -243,4 +262,3 @@ RUN apt-get clean && \
 WORKDIR /var/www
 
 EXPOSE 8000-8005
-
