@@ -18,6 +18,8 @@ ENV PGID ${PGID}
 ARG PHP_VERSION=${PHP_VERSION}
 ARG PHP_MEMORY_LIMIT=${PHP_MEMORY_LIMIT}
 
+COPY ./keyboard /etc/default/keyboard
+
 # always run apt update when start and after add new source list, then clean up at end.
 RUN apt-get update -yqq && \
     apt-get install -yqq graphviz curl wget zip unzip zsh vim ruby-full python-pip mysql-client mlocate net-tools xclip sudo libssl-dev && \
@@ -168,8 +170,6 @@ RUN composer global require hirak/prestissimo
 USER laradock
 
 # Check if NVM needs to be installed
-ARG NODE_VERSION=stable
-ENV NODE_VERSION ${NODE_VERSION}
 ARG INSTALL_NODE=true
 ARG NPM_REGISTRY
 ENV NPM_REGISTRY ${NPM_REGISTRY}
@@ -180,13 +180,13 @@ RUN if [ ${INSTALL_NODE} = true ]; then \
     # Install nvm (A Node Version Manager)
     curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.34.0/install.sh | bash && \
         . $NVM_DIR/nvm.sh && \
-        nvm install ${NODE_VERSION} && \
-        nvm use ${NODE_VERSION} && \
-        nvm alias ${NODE_VERSION} && \
+        nvm install --lts && \
+        nvm use --lts && \
         if [ ${NPM_REGISTRY} ]; then \
         npm config set registry ${NPM_REGISTRY} \
         ;fi && \
-        npm install -g bower gulp gulp-cli uglify-js uglifycss elasticdump \
+        npm install -g bower gulp gulp-cli uglify-js uglifycss elasticdump && \
+        ln -s `npm bin --global` /home/laradock/.node-bin \
 ;fi
 
 # Wouldn't execute when added to the RUN statement in the above block
@@ -207,7 +207,7 @@ RUN if [ ${INSTALL_NODE} = true ]; then \
 ;fi
 
 # Add PATH for node
-ENV PATH $PATH:$NVM_DIR/versions/node/v${NODE_VERSION}/bin
+ENV PATH $PATH:/home/laradock/.node-bin
 
 RUN if [ ${NPM_REGISTRY} ]; then \
     . ~/.bashrc && npm config set registry ${NPM_REGISTRY} \
@@ -242,6 +242,16 @@ RUN if [ ${INSTALL_YARN} = true ]; then \
     echo 'export YARN_DIR="/home/laradock/.yarn"' >> ~/.bashrc && \
     echo 'export PATH="$YARN_DIR/bin:$PATH"' >> ~/.bashrc \
 ;fi
+
+###########################################################################
+# wkhtmltopdf:
+###########################################################################
+
+RUN wget https://downloads.wkhtmltopdf.org/0.12/0.12.5/wkhtmltox_0.12.5-1.xenial_amd64.deb -P /tmp
+RUN dpkg --configure -a
+RUN apt-get install -y xvfb libfontconfig fontconfig libpng16-16 libxrender1 xfonts-75dpi build-essential xorg
+RUN dpkg -i /tmp/wkhtmltox_0.12.5-1.xenial_amd64.deb
+RUN apt-get update
 
 #
 #--------------------------------------------------------------------------
