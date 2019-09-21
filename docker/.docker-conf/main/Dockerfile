@@ -22,10 +22,11 @@ COPY ./keyboard /etc/default/keyboard
 
 # always run apt update when start and after add new source list, then clean up at end.
 RUN apt-get update -yqq && \
-    apt-get install -yqq graphviz curl wget zip unzip zsh vim ruby-full python-pip mysql-client mlocate net-tools xclip sudo libssl-dev && \
+    apt-get install -yqq graphviz curl wget zip unzip zsh vim ruby-full python-pip mysql-client mlocate net-tools xclip sudo libssl-dev safe-rm && \
 #    apt-get install -yqq php-imagick php-apcu php${PHP_VERSION}-soap php${PHP_VERSION}-sybase php${PHP_VERSION}-fpm && \
     gem update --system && gem install bundler sass && \
-    pecl channel-update pecl.php.net
+    pecl channel-update pecl.php.net && \
+    pip install Pygments
 
 RUN groupadd -g ${PGID} laradock
 RUN useradd -u ${PUID} -g laradock -m laradock -G docker_env
@@ -54,6 +55,7 @@ USER laradock
 
 RUN wget https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh -O - | zsh || true
 COPY ./.zshrc /home/laradock/.zshrc
+COPY ./.dir_colors /home/laradock/.dir_colors
 ENV ZSH_CUSTOM=/home/laradock/.oh-my-zsh/custom
 RUN git clone git://github.com/zsh-users/zsh-autosuggestions $ZSH_CUSTOM/plugins/zsh-autosuggestions
 

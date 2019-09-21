@@ -2,3 +2,4 @@
 node_modules
 vendor
 !.gitkeep
+dev_init.sh

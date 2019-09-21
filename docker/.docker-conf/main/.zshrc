@@ -1,6 +1,8 @@
 export ZSH="/home/laradock/.oh-my-zsh"
 export VISUAL=vim
 export EDITOR="$VISUAL"
+export SHELL=/bin/zsh
+eval `dircolors /home/laradock/.dir_colors`
 
 ZSH_THEME="robbyrussell"
 plugins=(
@@ -20,4 +22,3 @@ export PATH="$HOME/.symfony/bin:$PATH"
 
 SAVEHIST=10000
 HISTFILE="$HOME/shared/.zsh_history"
-

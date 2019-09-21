@@ -3,13 +3,15 @@ export VISUAL=vim
 export EDITOR="$VISUAL"
 eval `dircolors ~/.dir_colors`
 
-source $HOME/.fonts/fontawesome-regular.sh
+source ~/.fonts/fontawesome-regular.sh
 
 ZSH_THEME="powerlevel9k/powerlevel9k"
 
 POWERLEVEL9K_DISABLE_RPROMPT=true
 POWERLEVEL9K_COLOR_SCHEME='dark'
+
 POWERLEVEL9K_MODE='awesome-fontconfig'
+#POWERLEVEL9K_MODE="nerdfont-complete"
 
 DEFAULT_USER="rokas"
 
@@ -50,3 +52,5 @@ alias cat='pygmentize -g'
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
+export PATH="$HOME/.symfony/bin:$PATH"
